@@ -1,7 +1,7 @@
 # homebridge-generic-avr
 
 Homebridge plugin for AV Receivers
-Should work for all supported models as listed in the node_modules/eiscp/eiscp-commands.json. If your model is not listed, try TX-NR609.
+For Onkyo AV Receivers, should work for all supported models as listed in the node_modules/eiscp/eiscp-commands.json. If your model is not listed, try TX-NR609.
 
 # Description
 
@@ -19,7 +19,7 @@ Others...
 
 # Installation
 
-As a prerequisite ensure that the Onkyo receiver is controllable using the OnkyoRemote3 iOS app.
+For Onkyo AV Receiver, ensure that it is controllable using the OnkyoRemote3 iOS app.
 You also need to have [git](https://github.com/git/git) installed.
 
 It is recommended to install and configure this plugin using [homebridge-config-ui-x](https://github.com/oznu/homebridge-config-ui-x#readme), however you can also install manually using the following manual tasks:
