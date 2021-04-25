@@ -4,6 +4,7 @@ let Service;
 let Characteristic;
 const pollingtoevent = require('polling-to-event');
 const info = require('./package.json');
+const importFresh = require('import-fresh')
 
 class GenericAvrPlatform {
 	constructor(log, config, api) {
@@ -45,18 +46,17 @@ class GenericAvrPlatform {
 				}
 			});
 		}
-//		this.createAccessories(this, this.receivers);
-		
+
 	}
 
 	accessories (callback) {
 
 		var that = this
 		that.foundReceivers = []
-	
+
 		var numReceivers = that.receivers.length
 		that.log('Adding %s AVRs', numReceivers)
-	
+
 		that.receivers.forEach ( device => {
 			try {
 				const accessory = new GenericAvrAccessory(that, device)
@@ -155,8 +155,6 @@ class GenericAvrAccessory {
 
 
 	getServices () {
-//		this.UUID = this.platform.api.hap.uuid.generate('homebridge:homebridge-generic-avr' + this.name);
-//		this.accessory = new this.platform.api.platformAccessory(this.name, this.UUID, this.platform.api.hap.Accessory.Categories.AUDIO_RECEIVER); // eslint-disable-line new-cap
 		var that = this
 		var services = []
 
@@ -234,7 +232,6 @@ class GenericAvrAccessory {
 
 			that.tvService.addLinkedService(input);
 			services.push(input)
-//			console.log(input)
 		});
 
 		if (this.volume_dimmer) {
@@ -261,11 +258,6 @@ class GenericAvrAccessory {
 			this.tvService.addLinkedService(this.dimmer);
 		}
 
-//		this.platform.api.publishExternalAccessories('homebridge-generic-avr', [this.accessory]);
-
-//		console.log('============================== data ===========================')
-//		console.log(services)
-//		console.log('---------------------------------------------------------------')
 		return services
 	}
 
@@ -876,7 +868,8 @@ class OnkyoAvrAccessory {
 	}
 
 	connectAvr( obj ) {
-		this.eiscp = require('eiscp');
+		this.eiscp = importFresh('eiscp');
+		this.log.debug("Connecting to " + obj.name + " with IP: " + obj.ip_address);
 		this.eiscp.connect ( { host: obj.ip_address, reconnect: true, model: obj.model} );
 
 		// bind callback
