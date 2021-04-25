@@ -1,6 +1,7 @@
 # homebridge-generic-avr
 
-Homebridge plugin for AV Receivers
+Homebridge plugin for AV Receivers.
+
 For Onkyo AV Receivers, should work for all supported models as listed in the node_modules/eiscp/eiscp-commands.json. If your model is not listed, try TX-NR609.
 
 # Description
