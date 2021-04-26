@@ -1021,7 +1021,7 @@ class DenonAvrAccessory {
 
 	connectAvr( obj ) {
 		this.log.debug("Connecting to " + obj.name + " with IP: " + obj.ip_address);
-		const DenonAvrTelnet = require('denon-avr-telnet')
+		const {DenonAvrTelnet} = require('denon-avr-telnet')
 		this.denonClient = new DenonAvrTelnet(obj.ip_address);
 
 		// bind callback
