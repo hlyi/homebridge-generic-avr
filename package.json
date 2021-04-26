@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/hlyi/homebridge-generic-avr.git"
+    "url": "https://github.com/hlyi/homebridge-generic-avr.git"
   },
   "keywords": [
     "homebridge-plugin",
@@ -36,9 +36,6 @@
     "eslint": "^7.25.0",
     "import-fresh": "^3.3.0",
     "polling-to-event": "^2.1.0"
-  },
-  "publishConfig": {
-    "registry":"https://npm.pkg.github.com"
   },
   "engines": {
     "homebridge": ">=1.0.0",
