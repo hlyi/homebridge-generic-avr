@@ -1,105 +1,44 @@
 {
-  "_from": "homebridge-generic-avr",
-  "_id": "homebridge-generic-avr@0.1.0",
-  "_inBundle": false,
-  "_location": "/homebridge-generic-avr",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "tag",
-    "registry": true,
-    "raw": "homebridge-generic-avr",
-    "name": "homebridge-generic-avr",
-    "escapedName": "homebridge-generic-avr",
-    "rawSpec": "",
-    "saveSpec": null,
-    "fetchSpec": "latest"
+  "name": "homebridge-generic-avr",
+  "version": "0.1.0",
+  "description": "Homebridge plugin for AV Receivers. Support Onyko, Denon AVR",
+  "main": "index.js",
+  "scripts": {
+    "test": "xo"
   },
-  "_requiredBy": [
-    "#USER",
-    "/"
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hlyi/homebridge-generic-avr.git"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge",
+    "homebridge-generic-avr",
+    "AV Recevier",
+    "Denon",
+    "Denon AVR",
+    "Onkyo",
+    "Onkyo AVR",
+    "AVR",
+    "generic-avr"
   ],
-  "_spec": "homebridge-generic-avr",
   "author": {
-    "name": "hlyi",
-    "email": "hlyi@yahoo.com"
+    "name": "hlyi"
   },
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/hlyi/homebridge-generic-avr/issues"
   },
-  "bundleDependencies": false,
+  "homepage": "https://github.com/hlyi/homebridge-generic-avr#readme",
   "dependencies": {
+    "denon-avr-telnet": "git://github.com/alwinfy/denon-avr-telnet.git",
     "eiscp": "git://github.com/untitledlt/eiscp.js.git",
-    "package.json": "^2.0.1",
-    "polling-to-event": "^2.1.0",
-    "underscore": "^1.13.1"
-  },
-  "deprecated": false,
-  "description": "Homebridge plugin for AV Receivers",
-  "devDependencies": {
     "eslint": "^7.25.0",
-    "eslint-config-xo": "^0.34.0",
-    "eslint-plugin-ava": "^11.0.0",
-    "eslint-plugin-json": "^2.1.2",
-    "eslint-plugin-react": "^7.23.2",
-    "eslint-plugin-unicorn": "^25.0.1",
-    "xo": ">=0.37.1"
+    "import-fresh": "^3.3.0",
+    "polling-to-event": "^2.1.0"
   },
   "engines": {
     "homebridge": ">=1.0.0",
     "node": ">=10.0.0"
-  },
-  "homepage": "https://github.com/hlyi/homebridge-generic-avr#readme",
-  "keywords": [
-    "homebridge-plugin",
-    "homebridge",
-    "generic-avr-avr",
-    "generic-avr"
-  ],
-  "license": "MIT",
-  "main": "index.js",
-  "name": "homebridge-generic-avr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hlyi/homebridge-generic-avr.git"
-  },
-  "scripts": {
-    "pretest": "eslint --ignore-path .gitignore package.json config.schema.json",
-    "test": "xo"
-  },
-  "version": "0.1.0",
-  "xo": {
-    "space": false,
-    "rules": {
-      "camelcase": "off",
-      "kebabCase": "off",
-      "no-mixed-spaces-and-tabs": "warn",
-      "no-useless-escape": "warn",
-      "indent": "off",
-      "quotes": "warn",
-      "capitalized-comments": "off",
-      "no-var": "warn",
-      "prefer-destructuring": "off",
-      "prefer-arrow-callback": "warn",
-      "object-shorthand": [
-        "off",
-        "always",
-        {
-          "ignoreConstructors": true
-        }
-      ],
-      "quote-props": "error",
-      "no-unused-vars": "warn",
-      "curly": [
-        "error",
-        "multi-or-nest",
-        "consistent"
-      ],
-      "no-use-before-define": [
-        "error",
-        {
-          "classes": false
-        }
-      ]
-    }
   }
 }

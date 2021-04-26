@@ -114,7 +114,7 @@ class GenericAvrAccessory {
 		this.i_state = null;
 		this.interval = Number.parseInt(this.poll_status_interval, 10);
 
-		this.avrManufacturer = 'GenericAvr';
+		this.avrManufacturer = this.config.vendor;
 		this.avrSerial = this.config.serial || this.ip_address;
 		this.switchHandling = 'check';
 		if (this.interval > 10 && this.interval < 100000)
@@ -133,10 +133,10 @@ class GenericAvrAccessory {
 		this.log.debug('mapVolume100: %s', this.mapVolume100);
 		this.log.debug('avrSerial: %s', this.avrSerial);
 
-		this.vendor = new vendors[this.config.vendor](this)
+		this.vendor = new vendors[this.config.vendor](this);
 
 		if ( ! this.vendor.createRxInput(this) ) {
-			throw new Error('Unsupported Onyko Model-' + this.model );
+			throw new Error('Unsupported Onyko Model:' + this.model );
 		}
 		// Option to only configure specified inputs with filter_inputs
 		if (this.filter_inputs) {
@@ -830,7 +830,6 @@ class GenericAvrAccessory {
 
 // add protocol and comdev
 class OnkyoAvrAccessory {
-
 	constructor (obj ) {
 		this.zone = obj.zone;
 		this.log = obj.log;
@@ -846,8 +845,10 @@ class OnkyoAvrAccessory {
 		this.cmdMap.zone2.muting = 'muting';
 		this.cmdMap.zone2.input = 'selector';
 		obj.maxVolume = obj.config.max_volume || 60;
-		obj.avrManufacturer = 'Onkyo';
 		obj.zone = (obj.config.zone || 'main').toLowerCase();
+		if ( obj.zone !== 'main' && obj.zone !== 'zone2' ) {
+			throw new Error('Unsupported zone: ' + obj.config.zone);
+		}
 
 		obj.buttons = {
 			[Characteristic.RemoteKey.REWIND]: 'rew',
@@ -1001,7 +1002,127 @@ class OnkyoAvrAccessory {
 	}
 }
 
-const vendors = { "Onkyo" : OnkyoAvrAccessory }
+class DenonAvrAccessory {
+
+	constructor (obj ) {
+		this.zone = obj.zone;
+		this.log = obj.log;
+
+		obj.maxVolume = obj.config.max_volume || 80;
+		obj.zone = (obj.config.zone || 'MAIN').toUpperCase().replace('MAIN','MZ').replace('ZONE','Z');
+		if  (obj.zone !== 'MZ' && ! obj.zone.match('^Z\\d$') ) {
+			throw new Error ( 'Unsupported zone: ' + obj.config.zone );
+		}
+		// FIXME
+		obj.buttons = {
+		};
+
+	}
+
+	connectAvr( obj ) {
+		this.log.debug("Connecting to " + obj.name + " with IP: " + obj.ip_address);
+		const Denon = require('denon-avr-telnet')
+		this.denonClient = new Denon.DenonAvrTelnet(obj.ip_address);
+
+		// bind callback
+		this.denonClient.on('error', obj.eventError.bind(obj));
+		this.denonClient.on('connect', obj.eventConnect.bind(obj));
+		this.denonClient.on('close', obj.eventClose.bind(obj));
+		this.denonClient.on('powerChanged', obj.eventSystemPower.bind(obj));
+		this.denonClient.on('volumeChanged', obj.eventVolume.bind(obj));
+		this.denonClient.on('muteChanged', obj.eventAudioMuting.bind(obj));
+		this.denonClient.on('inputChanged', obj.eventInput.bind(obj));
+
+		this.denonClient.connect();
+	}
+
+	createRxInput (obj ) {
+		obj.log.debug("Creating RX input");
+	// Create the RxInput object for later use.
+
+		const inSets = ['CD', 'SPOTIFY', 'CBL/SAT', 'DVD', 'BD',
+			'GAME', 'GAME2', 'AUX1', 'MPLAY', 'USB/IPOD',
+			'TUNER', 'NETWORK', 'TV', 'IRADIO', 'SAT/CBL',
+			'DOCK', 'IPOD', 'NET/USB', 'RHAPSODY', 'PANDORA',
+			'LASTFM', 'IRP', 'FAVORITES', 'SERVER'];
+
+		let newobj = '{ "Inputs" : [';
+
+		inSets.forEach ( (i, idx ) => {
+			newobj += idx ? ', ' : '';
+			newobj += '{ "code":"' + i + '", "label":"' + i + '" }';
+		});
+		newobj += ']}';
+
+		// Drop last comma first
+		obj.log.debug(newobj);
+		obj.RxInputs = JSON.parse(newobj);
+		return true
+	}
+
+
+	setPowerStateOn(callback) {
+//		this.log.debug('Denon set Power On' )
+		this.denonClient.setPower(true).then(callback)
+	}
+
+	setPowerStateOff(callback) {
+//		this.log.debug('Denon set Power Off' )
+		this.denonClient.setPower(false).then(callback)
+	}
+
+	getPowerState(callback) {
+//		this.log.debug('Denon get Power' )
+		this.denonClient.getPower().then(callback)
+	}
+
+	getVolumeState(callback ) {
+//		this.log.debug('Denon get Volume' )
+		this.denonClient.getVolume().then(callback)
+	}
+
+	setVolumeState(volumeLvl, callback) {
+//		this.log.debug('Denon set Volume to ' + volumeLvl)
+		this.denonClient.setVolume(volumeLvl).then(callback)
+	}
+
+	setVolumeRelative(volUp, callback) {
+//		this.log.debug('Denon set Volume %s', volUp ? "Up" : "Down")
+		this.denonClient.setVolumeRelative(volUp).then(callback)
+	}
+
+	getMuteState(callback) {
+//		this.log.debug('Denon get Mute' )
+		this.denonClient.getMute().then(callback)
+	}
+
+	setMuteState(mute, callback) {
+//		this.log.debug('Denon set Mute %s', mute ? "On" : "Off")
+//		callback();
+		this.denonClient.setMute(mute).then(callback)
+	}
+
+	getInputSource(callback) {
+//		this.log.debug('Denon get Input Source' )
+		this.denonClient.getInput().then(callback)
+	}
+
+	setInputSource(label, callback ) {
+//		this.log.debug('Denon set Input to ' + label)
+		this.denonClient.setInput(label).then(callback)
+	}
+
+	remoteKeyPress(press, callback ) {
+		this.log.debug('Denon set Remote to ' + press)
+		callback();
+	}
+}
+
+const vendors = {
+	"Onkyo" : OnkyoAvrAccessory,
+	"Marantz" : DenonAvrAccessory,
+	"Denon" : DenonAvrAccessory
+}
 
 module.exports = homebridge => {
 	({Service, Characteristic} = homebridge.hap);
