@@ -1008,7 +1008,7 @@ class DenonAvrAccessory {
 		this.zone = obj.zone;
 		this.log = obj.log;
 
-		obj.maxVolume = obj.config.max_volume || 80;
+		obj.maxVolume = obj.config.max_volume || 99;
 		obj.zone = (obj.config.zone || 'MAIN').toUpperCase().replace('MAIN','MZ').replace('ZONE','Z');
 		if  (obj.zone !== 'MZ' && ! obj.zone.match('^Z\\d$') ) {
 			throw new Error ( 'Unsupported zone: ' + obj.config.zone );
@@ -1021,30 +1021,31 @@ class DenonAvrAccessory {
 
 	connectAvr( obj ) {
 		this.log.debug("Connecting to " + obj.name + " with IP: " + obj.ip_address);
-		const Denon = require('denon-avr-telnet')
-		this.denonClient = new Denon.DenonAvrTelnet(obj.ip_address);
+		const DenonAvrTelnet = require('denon-avr-telnet')
+		this.denonClient = new DenonAvrTelnet(obj.ip_address);
 
 		// bind callback
 		this.denonClient.on('error', obj.eventError.bind(obj));
-		this.denonClient.on('connect', obj.eventConnect.bind(obj));
+		this.denonClient.on('raw', obj.eventDebug.bind(obj));
+		this.denonClient.on('send', obj.eventDebug.bind(obj));
+		this.denonClient.on('connected', ()=> obj.eventConnect("Denon connected"));
 		this.denonClient.on('close', obj.eventClose.bind(obj));
 		this.denonClient.on('powerChanged', obj.eventSystemPower.bind(obj));
-		this.denonClient.on('volumeChanged', obj.eventVolume.bind(obj));
+		this.denonClient.on('volumeChanged', vol => obj.eventVolume (this.normalizeVolume(vol)));
 		this.denonClient.on('muteChanged', obj.eventAudioMuting.bind(obj));
 		this.denonClient.on('inputChanged', obj.eventInput.bind(obj));
 
-		this.denonClient.connect();
 	}
 
 	createRxInput (obj ) {
 		obj.log.debug("Creating RX input");
 	// Create the RxInput object for later use.
 
-		const inSets = ['CD', 'SPOTIFY', 'CBL/SAT', 'DVD', 'BD',
+		const inSets = ['UNKNOWN', 'CD', 'SPOTIFY', 'CBL/SAT', 'DVD', 'BD',
 			'GAME', 'GAME2', 'AUX1', 'MPLAY', 'USB/IPOD',
 			'TUNER', 'NETWORK', 'TV', 'IRADIO', 'SAT/CBL',
 			'DOCK', 'IPOD', 'NET/USB', 'RHAPSODY', 'PANDORA',
-			'LASTFM', 'IRP', 'FAVORITES', 'SERVER'];
+			'LASTFM', 'IRP', 'FAVORITES', 'SERVER', 'HDRADIO', 'PHONO', 'DVR', 'V.AUX'];
 
 		let newobj = '{ "Inputs" : [';
 
@@ -1060,56 +1061,59 @@ class DenonAvrAccessory {
 		return true
 	}
 
+	normalizeVolume (vol){
+		return Math.ceil(vol+81)
+	}
 
 	setPowerStateOn(callback) {
 //		this.log.debug('Denon set Power On' )
-		this.denonClient.setPower(true).then(callback)
+		this.denonClient.setPower(true).catch(callback)
 	}
 
 	setPowerStateOff(callback) {
 //		this.log.debug('Denon set Power Off' )
-		this.denonClient.setPower(false).then(callback)
+		this.denonClient.setPower(false).catch(callback)
 	}
 
 	getPowerState(callback) {
 //		this.log.debug('Denon get Power' )
-		this.denonClient.getPower().then(callback)
+		this.denonClient.getPower().catch(callback)
 	}
 
 	getVolumeState(callback ) {
 //		this.log.debug('Denon get Volume' )
-		this.denonClient.getVolume().then(callback)
+		this.denonClient.getVolume().catch(callback)
 	}
 
 	setVolumeState(volumeLvl, callback) {
 //		this.log.debug('Denon set Volume to ' + volumeLvl)
-		this.denonClient.setVolume(volumeLvl).then(callback)
+		this.denonClient.setVolume(volumeLvl).catch(callback)
 	}
 
 	setVolumeRelative(volUp, callback) {
 //		this.log.debug('Denon set Volume %s', volUp ? "Up" : "Down")
-		this.denonClient.setVolumeRelative(volUp).then(callback)
+		this.denonClient.setVolumeRelative(volUp).catch(callback)
 	}
 
 	getMuteState(callback) {
 //		this.log.debug('Denon get Mute' )
-		this.denonClient.getMute().then(callback)
+		this.denonClient.getMute().catch(callback)
 	}
 
 	setMuteState(mute, callback) {
 //		this.log.debug('Denon set Mute %s', mute ? "On" : "Off")
 //		callback();
-		this.denonClient.setMute(mute).then(callback)
+		this.denonClient.setMute(mute).catch(callback)
 	}
 
 	getInputSource(callback) {
 //		this.log.debug('Denon get Input Source' )
-		this.denonClient.getInput().then(callback)
+		this.denonClient.getInput().catch(callback)
 	}
 
 	setInputSource(label, callback ) {
 //		this.log.debug('Denon set Input to ' + label)
-		this.denonClient.setInput(label).then(callback)
+		this.denonClient.setInput(label).catch(callback)
 	}
 
 	remoteKeyPress(press, callback ) {
