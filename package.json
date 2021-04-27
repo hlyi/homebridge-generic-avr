@@ -19,6 +19,8 @@
     "Denon AVR",
     "Onkyo",
     "Onkyo AVR",
+    "Marantz",
+    "Marantz AVR",
     "AVR",
     "generic-avr"
   ],
@@ -33,9 +35,7 @@
   "dependencies": {
     "denon-avr-telnet": "git://github.com/alwinfy/denon-avr-telnet.git",
     "eiscp": "git://github.com/untitledlt/eiscp.js.git",
-    "eslint": "^7.25.0",
     "import-fresh": "^3.3.0",
-    "package.json": "^2.0.1",
     "polling-to-event": "^2.1.0"
   },
   "engines": {
