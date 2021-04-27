@@ -209,7 +209,7 @@ class GenericAvrAccessory {
 			.addCharacteristic(Characteristic.Volume)
 			.on('get', this.getVolumeState.bind(this))
 			.on('set', this.setVolumeState.bind(this));
-		this.tvService.addLinkedService(this.tvSpeakerService);
+		//this.tvService.addLinkedService(this.tvSpeakerService);
 		services.push(this.tvSpeakerService)
 
 		// input selector
@@ -255,7 +255,7 @@ class GenericAvrAccessory {
 				.on('get', this.getVolumeState.bind(this))
 				.on('set', this.setVolumeState.bind(this));
 
-			this.tvService.addLinkedService(this.dimmer);
+			this.tvSpeakerService.addLinkedService(this.dimmer);
 		}
 
 		return services
@@ -370,8 +370,8 @@ class GenericAvrAccessory {
 		this.m_state = (response === 'on');
 		this.log.debug('eventAudioMuting - message: %s, new m_state %s', response, this.m_state);
 		// Communicate status
-		if (this.tvService)
-			this.tvService.getCharacteristic(Characteristic.Mute).updateValue(this.m_state, null, 'm_statuspoll');
+		if (this.tvSpeakerService)
+			this.tvSpeakerService.getCharacteristic(Characteristic.Mute).updateValue(this.m_state, null, 'm_statuspoll');
 	}
 
 	eventInput(label) {
@@ -410,8 +410,8 @@ class GenericAvrAccessory {
 		}
 
 		// Communicate status
-		if (this.tvService)
-			this.tvService.getCharacteristic(Characteristic.Volume).updateValue(this.v_state, null, 'v_statuspoll');
+		if (this.tvSpeakerService)
+			this.tvSpeakerService.getCharacteristic(Characteristic.Volume).updateValue(this.v_state, null, 'v_statuspoll');
 	}
 
 	eventClose(response) {
@@ -442,7 +442,7 @@ class GenericAvrAccessory {
 		// do the callback immediately, to free homekit
 		// have the event later on execute changes
 		this.state = powerOn;
-		callback(null, this.state);
+		callback();
 		if (powerOn) {
 			this.log.debug('setPowerState - actual mode, power state: %s, switching to ON', this.state);
 			this.vendor.setPowerStateOn( error => {
@@ -567,7 +567,7 @@ class GenericAvrAccessory {
 		});
 
 		// Communicate status
-		if (this.tvService)
+		if (this.tvSpeakerService)
 			this.tvSpeakerService.getCharacteristic(Characteristic.Volume).updateValue(this.v_state);
 	}
 
@@ -615,7 +615,7 @@ class GenericAvrAccessory {
 		});
 
 		// Communicate status
-		if (this.tvService)
+		if (this.tvSpeakerService)
 			this.tvSpeakerService.getCharacteristic(Characteristic.Volume).updateValue(this.v_state);
 	}
 
@@ -659,7 +659,7 @@ class GenericAvrAccessory {
 		}
 
 		// Communicate status
-		if (this.tvService)
+		if (this.tvSpeakerService)
 			this.tvSpeakerService.getCharacteristic(Characteristic.Volume).updateValue(this.v_state);
 	}
 
@@ -689,7 +689,7 @@ class GenericAvrAccessory {
 		});
 
 		// Communicate status
-		if (this.tvService)
+		if (this.tvSpeakerService)
 			this.tvSpeakerService.getCharacteristic(Characteristic.Mute).updateValue(this.m_state);
 	}
 
@@ -732,7 +732,7 @@ class GenericAvrAccessory {
 		}
 
 		// Communicate status
-		if (this.tvService)
+		if (this.tvSpeakerService)
 			this.tvSpeakerService.getCharacteristic(Characteristic.Mute).updateValue(this.m_state);
 	}
 
@@ -750,20 +750,20 @@ class GenericAvrAccessory {
 			return;
 		}
 
-		// do the callback immediately, to free homekit
-		// have the event later on execute changes
-
 		this.log.debug('getInputState - actual mode, return i_state: ', this.i_state);
 		this.vendor.getInputSource(error =>{
 			if (error) {
 				this.i_state = 1;
-				this.log.error('getInputState - INPUT QRY: ERROR - current i_state: %s', this.i_state);
+				let errmsg = 'getInputState - INPUT QRY: ERROR - current i_state: ' + this.i_state
+				this.log.error(errmsg);
+				callback(new Error(errmsg));
+				return;
 			}
 		});
-		callback(null, this.i_state);
+		callback(null, this.i_state === null ? 0 : this.i_state);
 		// Communicate status
-//FIXME		if (this.tvService)
-//FIXME			this.tvService.getCharacteristic(Characteristic.ActiveIdentifier).updateValue(this.i_state);
+		if (this.tvService && this.i_state !== null )
+			this.tvService.getCharacteristic(Characteristic.ActiveIdentifier).updateValue(this.i_state);
 	}
 
 	setInputSource(source, callback, context) {
