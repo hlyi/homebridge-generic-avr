@@ -72,7 +72,7 @@ Field           			| Description
 **receivers**               | (required) List of receiver accessories to create. Must contain at least 1.
 Receiver Attributes         |
 ----------------------------|------------
-**vendor**                 | (required) Current supported values are: Onkyo
+**vendor**                 | (required) Current supported values are: Onkyo, Denon, Marantz
 **name**					| (required) The name you want to use for control of the AVR accessories.
 **ip_address**  			| (required) The internal ip address of your AVR.
 **model**					| (required) Must be a valid model listed in config.schema.json file. If your model is not listed, you can use the TX-NR609 if your model supports the Integra Serial Communication Protocol (ISCP).
