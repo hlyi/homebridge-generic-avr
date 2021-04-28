@@ -799,9 +799,8 @@ class GenericAvrAccessory {
 		this.vendor.getInputSource(error =>{
 			if (error) {
 				this.i_state = 1;
-				let errmsg = 'getInputState - INPUT QRY: ERROR - current i_state: ' + this.i_state
+				this.log.error( 'getInputState - INPUT QRY: ERROR - current i_state: ' + this.i_state);
 				this.log.error(error);
-				this.log.error(errmsg);
 				callback(error);
 				return;
 			}
@@ -1076,10 +1075,10 @@ class DenonAvrAccessory {
 
 		// bind callback
 		this.denonClient.on('error', obj.eventError.bind(obj));
-//		if ( this.debugverbose ) {
+		if ( this.debugverbose ) {
 			this.denonClient.on('raw', obj.eventDebug.bind(obj));
 			this.denonClient.on('send', obj.eventDebug.bind(obj));
-//		}
+		}
 		this.denonClient.on('connected', ()=> obj.eventConnect("Denon connected"));
 		this.denonClient.on('close', obj.eventClose.bind(obj));
 		this.denonClient.on('powerChanged', obj.eventSystemPower.bind(obj));
