@@ -1,7 +1,8 @@
 'use strict';
 
-let Service;
-let Characteristic;
+let Service, Characteristic, Accessory, UUID;
+
+const PLUGIN_NAME = 'homebridge-generic-avr'
 const pollingtoevent = require('polling-to-event');
 const info = require('./package.json');
 const importFresh = require('import-fresh')
@@ -17,58 +18,70 @@ class GenericAvrPlatform {
 		this.receivers = [];
 		this.receiverAccessories = [];
 		this.connections = {};
+		this.bridged = config.bridged || false;
+		this.debugverbose = config.debugverbose || false;
 
-		that.log.info('**************************************************************')
-		that.log.info('  homebridge-generic-avr version ' + info.version)
-		that.log.info('  GitHub: https://github.com/hlyi/homebridge-generic-avr')
-		that.log.info('**************************************************************')
-		that.log.info('start success...');
-		that.log.debug('Debug mode enabled');
+		this.log.info('**************************************************************')
+		this.log.info('  ' + PLUGIN_NAME + ' version ' + info.version)
+		this.log.info('  GitHub: https://github.com/hlyi/' + PLUGIN_NAME )
+		this.log.info('**************************************************************')
+		this.log.info('start success...');
+		this.log.debug('Debug mode enabled');
 
 		if (typeof config.receivers === 'undefined' ) {
-			that.log.error('ERROR: your configuration is incorrect. Configuration changed with version 0.7.x');
-			that.receivers = [];
+			this.log.error('ERROR: your configuration is incorrect. Configuration changed with version 0.7.x');
+			this.receivers = [];
 		}else{
 			config['receivers'].forEach ( (receiver, i) => {
 				let recvidx = i+1
 				if ( typeof receiver.vendor === 'undefined') {
-					that.log.error('Missing vendor in receiver ' + recvidx + '\'s configuration')
+					this.log.error('Missing vendor in receiver ' + recvidx + '\'s configuration')
 				}else if ( receiver.vendor in vendors ){
 					if ( typeof receiver.name === 'undefined' ) {
-						that.log.error('Missing name in receiver ' + recvidx + '\'s configuration');
+						this.log.error('Missing name in receiver ' + recvidx + '\'s configuration');
 					}else if ( typeof receiver.ip_address === 'undefined' ) {
-						that.log.error('Missing IP address in receiver ' + recvidx + '\'s configuration');
+						this.log.error('Missing IP address in receiver ' + recvidx + '\'s configuration');
 					}else {
-						that.receivers.push(receiver)
+						this.receivers.push(receiver)
 					}
 				}else {
-					that.log.error('Unsupported vendor : ' + receiver.vendor + ' in receiver ' + recvidx + '\'s configuration')
+					this.log.error('Unsupported vendor : ' + receiver.vendor + ' in receiver ' + recvidx + '\'s configuration')
 				}
 			});
+			if ( ! this.bridged ) {
+				this.createAccessories()
+			}
 		}
 
 	}
 
 	accessories (callback) {
+		if ( this.bridged ) {
+			this.createAccessories()
+			callback(this.foundReceivers)
+		}else {
+			callback ( [] )
+		}
+	}
 
-		var that = this
-		that.foundReceivers = []
+	createAccessories () {
 
-		var numReceivers = that.receivers.length
-		that.log('Adding %s AVRs', numReceivers)
+		this.foundReceivers = []
 
-		that.receivers.forEach ( device => {
+		var numReceivers = this.receivers.length
+		this.log('Adding %s AVRs', numReceivers)
+
+		this.receivers.forEach ( device => {
 			try {
-				const accessory = new GenericAvrAccessory(that, device)
-				that.foundReceivers.push(accessory)
+				const accessory = new GenericAvrAccessory(this, device)
+				this.foundReceivers.push(accessory)
 			}
 			catch ( e ) {
-				that.log.error( "Can't create AVR : " + device.name + " at " + device.ip_address + " with error: " + e.message)
+				this.log.error( "Can't create AVR : " + device.name + " at " + device.ip_address + " with error: " + e.message)
 			}
 		})
 
-		that.log('Added %s AVRs', that.foundReceivers.length)
-		callback(that.foundReceivers)
+		this.log('Added %s AVRs', this.foundReceivers.length)
 	}
 }
 
@@ -77,6 +90,7 @@ class GenericAvrAccessory {
 		var that = this
 		this.platform = platform;
 		this.log = platform.log;
+		this.debugverbose = platform.debugverbose;
 
 		this.setAttempt = 0;
 
@@ -147,16 +161,28 @@ class GenericAvrAccessory {
 				});
 			});
 		}
-
+		if ( ! this.bridged ) {
+			this.rcvuuid = UUID.generate(this.constructor.name + this.name + this.ip_address )
+			this.acc = new Accessory(this.name, this.rcvuuid, this.platform.api.hap.Accessory.Categories.TELEVISION);
+			this.acc.removeService(this.acc.getService(Service.AccessoryInformation));
+			this.createServices().forEach(service => { this.acc.addService(service) });
+		}
 //		this.createRxInput();
 		this.vendor.connectAvr(this);
 		this.polling(this);
+		if ( ! this.bridged ) {
+			this.platform.api.publishExternalAccessories(PLUGIN_NAME, [this.acc]);
+		}
 	}
 
 
 	getServices () {
+		if ( this.bridged ) return this.createServices()
+	}
+
+	createServices () {
 		var that = this
-		var services = []
+		let services = []
 
 		// add basic information
 		let	infoAcc = new Service.AccessoryInformation;
@@ -170,7 +196,7 @@ class GenericAvrAccessory {
 
 		// add tv service
 		this.log.debug('Creating TV service for receiver %s', this.name);
-		this.tvService = new Service.Television( this.name);
+		this.tvService = new Service.Television( this.name, 'tvService');
 		this.tvService
 			.getCharacteristic(Characteristic.ConfiguredName)
 			.setValue(this.name)
@@ -209,7 +235,7 @@ class GenericAvrAccessory {
 			.addCharacteristic(Characteristic.Volume)
 			.on('get', this.getVolumeState.bind(this))
 			.on('set', this.setVolumeState.bind(this));
-		//this.tvService.addLinkedService(this.tvSpeakerService);
+		this.tvService.addLinkedService(this.tvSpeakerService);
 		services.push(this.tvSpeakerService)
 
 		// input selector
@@ -874,7 +900,9 @@ class OnkyoAvrAccessory {
 		this.eiscp.connect ( { host: obj.ip_address, reconnect: true, model: obj.model} );
 
 		// bind callback
-		this.eiscp.on('debug', obj.eventDebug.bind(obj));
+		if ( this.debugverbose ) {
+			this.eiscp.on('debug', obj.eventDebug.bind(obj));
+		}
 		this.eiscp.on('error', obj.eventError.bind(obj));
 		this.eiscp.on('connect', obj.eventConnect.bind(obj));
 		this.eiscp.on('close', obj.eventClose.bind(obj));
@@ -1026,8 +1054,10 @@ class DenonAvrAccessory {
 
 		// bind callback
 		this.denonClient.on('error', obj.eventError.bind(obj));
-		this.denonClient.on('raw', obj.eventDebug.bind(obj));
-		this.denonClient.on('send', obj.eventDebug.bind(obj));
+		if ( this.debugverbose ) {
+			this.denonClient.on('raw', obj.eventDebug.bind(obj));
+			this.denonClient.on('send', obj.eventDebug.bind(obj));
+		}
 		this.denonClient.on('connected', ()=> obj.eventConnect("Denon connected"));
 		this.denonClient.on('close', obj.eventClose.bind(obj));
 		this.denonClient.on('powerChanged', obj.eventSystemPower.bind(obj));
@@ -1128,7 +1158,10 @@ const vendors = {
 	"Denon" : DenonAvrAccessory
 }
 
-module.exports = homebridge => {
-	({Service, Characteristic} = homebridge.hap);
-	homebridge.registerPlatform('homebridge-generic-avr', 'GenericAvr', GenericAvrPlatform);
+module.exports = (api) => {
+	Accessory = api.platformAccessory;
+	Characteristic = api.hap.Characteristic;
+	Service = api.hap.Service;
+	UUID = api.hap.uuid;
+	api.registerPlatform(PLUGIN_NAME, 'GenericAvr', GenericAvrPlatform);
 };
