@@ -1030,6 +1030,7 @@ class OnkyoAvrAccessory {
 	}
 }
 
+const DenonAvrTelnet = require('denon-avr-telnet')
 class DenonAvrAccessory {
 
 	constructor (obj ) {
@@ -1049,8 +1050,7 @@ class DenonAvrAccessory {
 
 	connectAvr( obj ) {
 		this.log.debug("Connecting to " + obj.name + " with IP: " + obj.ip_address);
-		const {DenonAvrTelnet} = require('denon-avr-telnet')
-		this.denonClient = new DenonAvrTelnet(obj.ip_address);
+		this.denonClient = new DenonAvrTelnet.DenonAvrTelnet(obj.ip_address, { timeout:2000, sendTimeout:2400} );
 
 		// bind callback
 		this.denonClient.on('error', obj.eventError.bind(obj));
@@ -1064,18 +1064,13 @@ class DenonAvrAccessory {
 		this.denonClient.on('volumeChanged', vol => obj.eventVolume (this.normalizeVolume(vol)));
 		this.denonClient.on('muteChanged', obj.eventAudioMuting.bind(obj));
 		this.denonClient.on('inputChanged', obj.eventInput.bind(obj));
-
 	}
 
 	createRxInput (obj ) {
 		obj.log.debug("Creating RX input");
 	// Create the RxInput object for later use.
 
-		const inSets = ['UNKNOWN', 'CD', 'SPOTIFY', 'CBL/SAT', 'DVD', 'BD',
-			'GAME', 'GAME2', 'AUX1', 'MPLAY', 'USB/IPOD',
-			'TUNER', 'NETWORK', 'TV', 'IRADIO', 'SAT/CBL',
-			'DOCK', 'IPOD', 'NET/USB', 'RHAPSODY', 'PANDORA',
-			'LASTFM', 'IRP', 'FAVORITES', 'SERVER', 'HDRADIO', 'PHONO', 'DVR', 'V.AUX'];
+		const inSets = DenonAvrTelnet.SI_TYPES;
 
 		let newobj = '{ "Inputs" : [';
 
