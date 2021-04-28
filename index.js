@@ -800,8 +800,9 @@ class GenericAvrAccessory {
 			if (error) {
 				this.i_state = 1;
 				let errmsg = 'getInputState - INPUT QRY: ERROR - current i_state: ' + this.i_state
+				this.log.error(error);
 				this.log.error(errmsg);
-				callback(new Error(errmsg));
+				callback(error);
 				return;
 			}
 		});

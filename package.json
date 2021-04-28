@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/hlyi/homebridge-generic-avr#readme",
   "dependencies": {
-    "denon-avr-telnet": "git://github.com/alwinfy/denon-avr-telnet.git",
+    "denon-avr-telnet": "git://github.com/Alwinfy/denon-avr-telnet.git#0.2.0",
     "eiscp": "git://github.com/untitledlt/eiscp.js.git",
     "import-fresh": "^3.3.0",
     "polling-to-event": "^2.1.0"
