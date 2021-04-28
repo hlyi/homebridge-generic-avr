@@ -7,6 +7,20 @@ const pollingtoevent = require('polling-to-event');
 const info = require('./package.json');
 const importFresh = require('import-fresh')
 
+class WrappingLog {
+	static get LOG_TYPES() {
+		return ["error", "info", "debug"];
+	}
+	constructor(prefix, log) {
+		this.prefix = prefix;
+		this.log = log;
+		WrappingLog.LOG_TYPES.forEach(type => {
+			const callback = log[type].bind(log);
+			this[type] = (first, ...rest) => callback(this.prefix + first, ...rest);
+		});
+	}
+}
+
 class GenericAvrPlatform {
 	constructor(log, config, api) {
 		var that = this;
@@ -69,11 +83,13 @@ class GenericAvrPlatform {
 		this.foundReceivers = []
 
 		var numReceivers = this.receivers.length
-		this.log('Adding %s AVRs', numReceivers)
+		this.log.info('Adding %s AVRs', numReceivers)
 
 		this.receivers.forEach ( device => {
 			try {
+				this.log.info( 'Adding Receiver: ' + device.name )
 				const accessory = new GenericAvrAccessory(this, device)
+				this.log.info( accessory.name + ' is added')
 				this.foundReceivers.push(accessory)
 			}
 			catch ( e ) {
@@ -81,7 +97,7 @@ class GenericAvrPlatform {
 			}
 		})
 
-		this.log('Added %s AVRs', this.foundReceivers.length)
+		this.log.info('Added %s AVRs', this.foundReceivers.length)
 	}
 }
 
@@ -89,13 +105,13 @@ class GenericAvrAccessory {
 	constructor(platform, receiver) {
 		var that = this
 		this.platform = platform;
-		this.log = platform.log;
 		this.debugverbose = platform.debugverbose;
 
 		this.setAttempt = 0;
 
 		this.config = receiver;
 		this.name = this.config.name;
+		this.log = new WrappingLog(`(${this.name}) `,platform.log);
 		this.ip_address	= this.config.ip_address;
 		this.model = this.config.model;
 		this.zone = (this.config.zone || 'main').toLowerCase();
@@ -134,10 +150,16 @@ class GenericAvrAccessory {
 		if (this.interval > 10 && this.interval < 100000)
 			this.switchHandling = 'poll';
 
-		this.log.debug('name %s', this.name);
-		this.log.debug('IP %s', this.ip_address);
-		this.log.debug('Model %s', this.model);
-		this.log.debug('Zone %s', this.zone);
+		this.vendor = new vendors[this.config.vendor](this);
+
+		if ( ! this.vendor.createRxInput(this) ) {
+			throw new Error('Unsupported %s Model: %s', this.config.vendor, this.model );
+		}
+
+		this.log.debug('name: %s', this.name);
+		this.log.debug('IP: %s', this.ip_address);
+		this.log.debug('Model: %s', this.model);
+		this.log.debug('Zone: %s', this.zone);
 		this.log.debug('volume_dimmer: %s', this.volume_dimmer);
 		this.log.debug('filter_inputs: %s', this.filter_inputs);
 		this.log.debug('poll_status_interval: %s', this.poll_status_interval);
@@ -147,11 +169,6 @@ class GenericAvrAccessory {
 		this.log.debug('mapVolume100: %s', this.mapVolume100);
 		this.log.debug('avrSerial: %s', this.avrSerial);
 
-		this.vendor = new vendors[this.config.vendor](this);
-
-		if ( ! this.vendor.createRxInput(this) ) {
-			throw new Error('Unsupported Onyko Model:' + this.model );
-		}
 		// Option to only configure specified inputs with filter_inputs
 		if (this.filter_inputs) {
 			// Check the RxInputs.Inputs items to see if each exists in this.inputs. Return new array of those that do.
