@@ -39,6 +39,7 @@ class GenericAvrPlatform {
 		this.log.info('  ' + PLUGIN_NAME + ' version ' + info.version)
 		this.log.info('  GitHub: https://github.com/hlyi/' + PLUGIN_NAME )
 		this.log.info('**************************************************************')
+		this.log.info('Use bridge mode: ' + this.bridged);
 		this.log.info('start success...');
 		this.log.debug('Debug mode enabled');
 
@@ -105,11 +106,12 @@ class GenericAvrAccessory {
 	constructor(platform, receiver) {
 		var that = this
 		this.platform = platform;
-		this.debugverbose = platform.debugverbose;
+		this.bridged = platform.bridged;
 
 		this.setAttempt = 0;
 
 		this.config = receiver;
+		this.debugverbose = this.config.debugverbose || platform.debugverbose;
 		this.name = this.config.name;
 		this.log = new WrappingLog(`(${this.name}) `,platform.log);
 		this.ip_address	= this.config.ip_address;
@@ -876,6 +878,7 @@ class OnkyoAvrAccessory {
 	constructor (obj ) {
 		this.zone = obj.zone;
 		this.log = obj.log;
+		this.debugverbose = obj.debugverbose;
 		this.cmdMap = new Array(2);
 		this.cmdMap.main = new Array(4);
 		this.cmdMap.main.power = 'system-power';
@@ -1053,6 +1056,7 @@ class DenonAvrAccessory {
 	constructor (obj ) {
 		this.zone = obj.zone;
 		this.log = obj.log;
+		this.debugverbose = obj.debugverbose;
 
 		obj.maxVolume = obj.config.max_volume || 99;
 		obj.zone = (obj.config.zone || 'MAIN').toUpperCase().replace('MAIN','MZ').replace('ZONE','Z');
@@ -1071,10 +1075,10 @@ class DenonAvrAccessory {
 
 		// bind callback
 		this.denonClient.on('error', obj.eventError.bind(obj));
-		if ( this.debugverbose ) {
+//		if ( this.debugverbose ) {
 			this.denonClient.on('raw', obj.eventDebug.bind(obj));
 			this.denonClient.on('send', obj.eventDebug.bind(obj));
-		}
+//		}
 		this.denonClient.on('connected', ()=> obj.eventConnect("Denon connected"));
 		this.denonClient.on('close', obj.eventClose.bind(obj));
 		this.denonClient.on('powerChanged', obj.eventSystemPower.bind(obj));
@@ -1144,7 +1148,6 @@ class DenonAvrAccessory {
 
 	setMuteState(mute, callback) {
 //		this.log.debug('Denon set Mute %s', mute ? "On" : "Off")
-//		callback();
 		this.denonClient.setMute(mute).catch(callback)
 	}
 

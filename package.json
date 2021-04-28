@@ -1,6 +1,6 @@
 {
   "name": "homebridge-generic-avr",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Homebridge plugin for AV Receivers. Support Onyko, Denon AVR",
   "main": "index.js",
   "scripts": {
