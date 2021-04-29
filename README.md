@@ -4,6 +4,8 @@ Homebridge plugin for AV Receivers.
 
 For Onkyo AV Receivers, should work for all supported models as listed in the node_modules/eiscp/eiscp-commands.json. If your model is not listed, try TX-NR609.
 
+For Denon AV Receivers, it has been tested on AVR-3312. Supports power on/off, input selection.
+
 # Description
 
 This is an enhanced fork from homebridge-onkyo plugin written by ToddGreenfield
@@ -70,7 +72,7 @@ Field           			| Description
 **receivers**               | (required) List of receiver accessories to create. Must contain at least 1.
 Receiver Attributes         |
 ----------------------------|------------
-**vendor**                 | (required) Current supported values are: Onkyo
+**vendor**                 | (required) Current supported values are: Onkyo, Denon, Marantz
 **name**					| (required) The name you want to use for control of the AVR accessories.
 **ip_address**  			| (required) The internal ip address of your AVR.
 **model**					| (required) Must be a valid model listed in config.schema.json file. If your model is not listed, you can use the TX-NR609 if your model supports the Integra Serial Communication Protocol (ISCP).
