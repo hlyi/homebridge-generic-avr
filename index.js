@@ -115,7 +115,11 @@ class GenericAvrAccessory {
 		this.name = this.config.name;
 		this.log = new WrappingLog(`(${this.name}) `,platform.log);
 		this.ip_address	= this.config.ip_address;
-		this.model = this.config.model;
+		if ( receiver.model.startsWith ( receiver.vendor + ' ' ) ){
+			this.model = receiver.model.substr(receiver.vendor.length + 1);
+		}else {
+			throw new Error('Unsupported %s Model: %s', receiver.vendor, receiver.model );
+		}
 		this.zone = (this.config.zone || 'main').toLowerCase();
 
 		if (typeof this.config.volume_dimmer === 'undefined') {
