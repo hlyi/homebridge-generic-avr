@@ -8,7 +8,7 @@ For Denon AV Receivers, it has been tested on AVR-3312. Supports power on/off, i
 
 # Description
 
-This is an enhanced fork from homebridge-onkyo plugin written by ToddGreenfield
+This is an enhanced fork from homebridge-onkyo plugin written by [ToddGreenfield](https://github.com/ToddGreenfield/homebridge-onkyo).
 The goal is to add supports for other brand AV receivers, such as Denon
 
 # Changelog
